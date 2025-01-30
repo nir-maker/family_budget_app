@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול תקציב משפחתי</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            direction: rtl;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 400px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2, h3 {
+            margin-bottom: 15px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .reset {
+            background-color: #dc3545;
+        }
+        .reset:hover {
+            background-color: #c82333;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            background: white;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>ניהול תקציב משפחתי</h2>
+        <h3>יתרה נוכחית: <span id="balance">0</span> ש"ח</h3>
+        <input type="number" id="amount" placeholder="סכום" step="0.01" min="0.01">
+        <input type="text" id="category" placeholder="קטגוריה">
+        <select id="type">
+            <option value="income">הכנסה</option>
+            <option value="expense">הוצאה</option>
+        </select>
+        <button onclick="addTransaction()">הוסף</button>
+        <button class="reset" onclick="resetData()">איפוס נתונים</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>סכום</th>
+                    <th>קטגוריה</th>
+                    <th>סוג</th>
+                </tr>
+            </thead>
+            <tbody id="transactions"></tbody>
+        </table>
+    </div>
+    <script>
+        let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+        let balance = parseFloat(localStorage.getItem("balance")) || 0;
+        
+        function updateUI() {
+            document.getElementById("balance").innerText = balance.toFixed(2);
+            const transactionsTable = document.getElementById("transactions");
+            transactionsTable.innerHTML = "";
+            transactions.forEach(transaction => {
+                const row = document.createElement("tr");
+                row.innerHTML = `<td>${transaction.amount.toFixed(2)}</td>
+                                 <td>${transaction.category}</td>
+                                 <td>${transaction.type === 'income' ? 'הכנסה' : 'הוצאה'}</td>`;
+                transactionsTable.appendChild(row);
+            });
+            localStorage.setItem("transactions", JSON.stringify(transactions));
+            localStorage.setItem("balance", balance);
+        }
+        
+        function addTransaction() {
+            const amountInput = document.getElementById("amount");
+            const categoryInput = document.getElementById("category");
+            const type = document.getElementById("type").value;
+            
+            const amount = parseFloat(amountInput.value);
+            const category = categoryInput.value.trim();
+            
+            if (isNaN(amount) || amount <= 0 || category === "") {
+                alert("נא להזין סכום תקין וקטגוריה תקינה.");
+                return;
+            }
+            
+            transactions.push({ amount: type === "income" ? amount : -amount, category, type });
+            balance += type === "income" ? amount : -amount;
+            
+            amountInput.value = "";
+            categoryInput.value = "";
+            
+            updateUI();
+        }
+        
+        function resetData() {
+            if (confirm("האם אתה בטוח שברצונך לאפס את הנתונים?")) {
+                transactions = [];
+                balance = 0;
+                localStorage.removeItem("transactions");
+                localStorage.removeItem("balance");
+                updateUI();
+            }
+        }
+        
+        document.addEventListener("DOMContentLoaded", updateUI);
+    </script>
+</body>
+</html>
